@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -10,22 +11,28 @@ using std::cout, std::endl;
 int main()
 {
     //Window size
-    unsigned int windowWidth = 1080;
-    unsigned int windowHeight = 720;
+
 
     sf::ContextSettings settings;
     settings.antiAliasingLevel = 16;
 
-    sf::RenderWindow window(sf::VideoMode({ windowWidth, windowHeight }), "SFML works!");
+    sf::RenderWindow window(sf::VideoMode({ 1080, 720 }), "Ball Simulation",sf::State::Windowed, settings);
     window.setFramerateLimit(60);
+    float windowWidth  = static_cast<float>(window.getSize().x);
+    float windowHeight = static_cast<float>(window.getSize().y);
+
+    sf::View view(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(window.getSize().x, window.getSize().y)));
 
     // Center of window vector coordinates
     sf::Vector2f windowCenter(windowWidth / 2, windowHeight / 2);
 
-
-    bool fallDownMode = false;
+    //Booleans for keys pressed
     bool fPressedLastFrame = false;
     bool spacePressedLastFrame = false;
+
+    //Boolean for gravity mode
+    bool fallDownMode = false;
+
 
     //Hold all balls on screen
     std::vector<Ball> balls;
@@ -36,12 +43,22 @@ int main()
     {
         while (const std::optional event = window.pollEvent())
         {
+            //Close window if title bar X is hit
             if (event->is<sf::Event::Closed>())
                 window.close();
+            //Change visible area of window when resized
+            if (const auto* resized = event->getIf<sf::Event::Resized>())
+            {
+                windowWidth = window.getSize().x;
+                windowHeight = window.getSize().y;
+                sf::FloatRect visibleArea({ 0.f, 0.f }, sf::Vector2f(resized->size));
+                window.setView(sf::View(visibleArea));
+            }
         }
 
         //Update deltaTime
         float deltaTime = clock.restart().asSeconds();
+        //Get mouse position (x,y)
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
         //--Spawn/Delete Balls
@@ -83,13 +100,10 @@ int main()
             }
         }
 
-
-
-
+        //Clear window from last draw
         window.clear(sf::Color::Black);
 
-
-
+        //Draw all balls in balls vector
         for (auto& ball : balls)
         {
             window.draw(ball.shape);
@@ -112,7 +126,11 @@ int main()
             }
         }
 
+        //Display to screen
         window.display();
+
+        //Debug for window size change from resize
+        cout << "X: " << windowWidth << "Y: " << windowHeight << endl;
 
     }
 }
