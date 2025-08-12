@@ -28,10 +28,17 @@ int main()
 
     //Booleans for keys pressed
     bool fPressedLastFrame = false;
-    bool spacePressedLastFrame = false;
+    bool spacePressedLastFrame = false; // Controls 1 ball spawn per frame
 
     //Boolean for gravity mode
-    bool fallDownMode = false;
+    bool fallDownMode = false; // Controls gravity(mouse centered or downward)
+    //Booleans for pausing
+    bool paused = false; //Check if game is paused
+    bool pPressedLastFrame = false; //Check if p(pause) was pressed last frame
+    bool nPressedLastFrame = false; //Check if n(frame by frame) was pressed last frame
+
+    //Step only 1 frame
+    const float fixedStep = 1.0f / 60.0f;
 
 
     //Hold all balls on screen
@@ -56,8 +63,38 @@ int main()
             }
         }
 
-        //Update deltaTime
-        float deltaTime = clock.restart().asSeconds();
+        //Update realTime
+        float realDT = clock.restart().asSeconds();
+
+        //--Handle pause toggle (P)
+        bool pNow = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::P);
+        if (pNow && !pPressedLastFrame)
+        {
+            paused = !paused;
+            clock.restart(); // Discard dt from accumulating from current frame
+        }
+        pPressedLastFrame = pNow;
+
+        //--Handle single-step(N)
+        bool stepNow = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::N);
+        bool stepRequested = false;
+        if (stepNow && !nPressedLastFrame)
+        {
+            if (paused) stepRequested = true; // Only steps when paused
+        }
+        nPressedLastFrame = stepNow;
+
+        //Choose the simulation delta
+        float simDT = 0.0f;
+        if (!paused)
+        {
+            simDT = realDT; // Normal Run
+        }
+        else if (stepRequested)
+        {
+            simDT = fixedStep; // One step while paused
+        }
+
         //Get mouse position (x,y)
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 
@@ -83,20 +120,23 @@ int main()
         }
         fPressedLastFrame = fNow;
 
-
-        //--Update ball positions 
-        for (auto& ball : balls)
+        //--Update ball positions only when simDT > 0;
+        if (simDT > 0.0f)
         {
-            ball.update(deltaTime, mousePos, windowHeight, windowWidth, fallDownMode);
-            ball.setGravityStrength();
-        }
-
-        //Check if balls are colliding
-        for (size_t i = 0; i < balls.size(); ++i)
-        {
-            for (size_t j = i + 1; j < balls.size(); ++j)
+            //--Update ball positions 
+            for (auto& ball : balls)
             {
-                ballCollision(balls[i], balls[j]);
+                ball.update(realDT, mousePos, windowHeight, windowWidth, fallDownMode);
+                ball.setGravityStrength();
+            }
+
+            //Check if balls are colliding
+            for (size_t i = 0; i < balls.size(); ++i)
+            {
+                for (size_t j = i + 1; j < balls.size(); ++j)
+                {
+                    ballCollision(balls[i], balls[j]);
+                }
             }
         }
 
@@ -109,7 +149,7 @@ int main()
             window.draw(ball.shape);
         }
 
-        //Create a green line from ball center to mouse position
+        //--Create a green line from ball center to mouse position
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
         {
             for (auto& ball : balls)
@@ -130,7 +170,7 @@ int main()
         window.display();
 
         //Debug for window size change from resize
-        cout << "X: " << windowWidth << "Y: " << windowHeight << endl;
+        //cout << "X: " << windowWidth << "Y: " << windowHeight << endl;
 
     }
 }
