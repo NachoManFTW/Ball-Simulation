@@ -26,5 +26,8 @@
     <ClInclude Include="source\collision.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="source\features.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

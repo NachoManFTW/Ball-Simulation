@@ -142,6 +142,7 @@
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\features.hpp" />
     <ClInclude Include="source\ball.hpp" />
     <ClInclude Include="source\collision.hpp" />
   </ItemGroup>
